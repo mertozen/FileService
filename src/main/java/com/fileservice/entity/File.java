@@ -10,17 +10,19 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.UUID;
 
-@Table("contents")
+@Table("file")
 @Data
-public class Content implements Serializable {
+public class File implements Serializable {
 
     @PrimaryKey
     @CassandraType(type = DataType.Name.UUID)
-    private UUID id=UUID.randomUUID();
+    private UUID id;
 
     private String Description;
 
-    private String contentType;
+    private String ext;
+
+    private String filename;
 
     private Date ExpiryDate;
 
