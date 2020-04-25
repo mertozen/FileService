@@ -15,6 +15,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.util.UUID;
 
 @RestController
 @RequestMapping(path = "/api/v1/files")
@@ -43,6 +44,12 @@ public class FileController {
     }
 
     @GetMapping("{id}")
+    public Mono<File> getFile(@PathVariable String id){
+
+        return fileService.getFile(UUID.fromString(id));
+    }
+
+    @GetMapping("/download/{id}")
     public  Mono<ResponseEntity<InputStreamResource>> download(@PathVariable String id){
 
         return fileService.load(id).map(x -> ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,String.format("attachment;filename={}",id)).body(new InputStreamResource(x)));

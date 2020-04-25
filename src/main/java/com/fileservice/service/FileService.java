@@ -6,6 +6,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.InputStream;
+import java.util.UUID;
 
 public interface FileService {
 
@@ -13,5 +14,7 @@ public interface FileService {
 
     public Flux<File> findAll();
 
-    Mono<File> saveFile(FilePart filePart);
+    public Mono<File> saveFile(FilePart filePart);
+
+    public Mono<File> getFile(UUID id);
 }

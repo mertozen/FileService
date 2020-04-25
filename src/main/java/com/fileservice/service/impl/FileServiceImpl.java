@@ -61,4 +61,9 @@ public class FileServiceImpl implements FileService {
 
         return base.resolve(id);
     }
+
+    public Mono<File> getFile(UUID id){
+
+        return fileRepository.findById(id);
+    }
 }
