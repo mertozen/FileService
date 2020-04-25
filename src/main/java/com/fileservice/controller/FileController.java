@@ -1,5 +1,7 @@
 package com.fileservice.controller;
 
+import com.fileservice.dto.FileResponseDto;
+import com.fileservice.dto.FileUploadResponse;
 import com.fileservice.entity.File;
 import com.fileservice.service.FileService;
 import org.slf4j.Logger;
@@ -32,13 +34,13 @@ public class FileController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE )
-    public Mono<File> fileUpload(@RequestPart("file") FilePart filePart) throws IOException {
+    public Mono<FileUploadResponse> fileUpload(@RequestPart("file") FilePart filePart) throws IOException {
 
         return fileService.saveFile(filePart);
     }
 
     @GetMapping
-    public Flux<File> getFiles(){
+    public Flux<FileResponseDto> getFiles(){
 
         return fileService.findAll();
     }
@@ -54,4 +56,11 @@ public class FileController {
 
         return fileService.load(id).map(x -> ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,String.format("attachment;filename={}",id)).body(new InputStreamResource(x)));
     }
+
+    @GetMapping("/download/thumbnail/{id}")
+    public  Mono<ResponseEntity<InputStreamResource>> downloadThumbnail(@PathVariable String id){
+
+        return fileService.loadThumbnail(id).map(x -> ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,String.format("attachment;filename={}",id)).body(new InputStreamResource(x)));
+    }
+
 }

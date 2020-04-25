@@ -1,18 +1,18 @@
 package com.fileservice.service.impl;
 
+import com.fileservice.dto.FileResponseDto;
+import com.fileservice.dto.FileUploadResponse;
 import com.fileservice.entity.File;
 import com.fileservice.repository.FileRepository;
 import com.fileservice.service.FileService;
+import com.fileservice.util.FileUtil;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Date;
 import java.util.UUID;
 
 @Service
@@ -20,7 +20,6 @@ public class FileServiceImpl implements FileService {
 
     private final FileRepository fileRepository;
 
-    private Path base = Paths.get("/Users/mert/Documents/Projects/FileService/");
 
     public FileServiceImpl(FileRepository fileRepository) {
         this.fileRepository = fileRepository;
@@ -28,41 +27,53 @@ public class FileServiceImpl implements FileService {
 
     public Mono<InputStream> load(String id) {
 
-        return Mono.defer(() -> {
-            try {
-                return Mono.just(Files.newInputStream(path(id)));
-            } catch (IOException e) {
-                return Mono.error(e);
-            }
+        return FileUtil.loadFile(id);
+    }
+
+    public Mono<InputStream> loadThumbnail(String id) {
+
+        return FileUtil.loadThumbnailFile(id);
+    }
+
+    @Override
+    public Flux<FileResponseDto> findAll() {
+        //TODO Mapper implementation
+        return fileRepository.findAll().map(file -> {
+
+            FileResponseDto fileResponseDto = new FileResponseDto();
+            fileResponseDto.setFileId(file.getId());
+            fileResponseDto.setDescription(file.getDescription());
+            fileResponseDto.setThumbnailname(file.getThumbnail());
+            fileResponseDto.setExpiryDate(file.getExpiryDate());
+            fileResponseDto.setExtension(file.getExt());
+            fileResponseDto.setFilename(file.getFilename());
+
+            return fileResponseDto;
         });
     }
 
     @Override
-    public Flux<File> findAll() {
-        return fileRepository.findAll();
-    }
+    public Mono<FileUploadResponse> saveFile(FilePart filePart) {
 
-    @Override
-    public Mono<File> saveFile(FilePart filePart) {
-
-        UUID id = UUID.randomUUID();
-        java.io.File savedFileToDisk = new java.io.File(base.toString()+"/"+id);
-        filePart.transferTo(savedFileToDisk);
+        UUID fileId = UUID.randomUUID();
+        FileUtil.saveToDisk(filePart, fileId.toString());
         File file = new File();
-        file.setId(id);
+        file.setId(fileId);
         file.setFilename(filePart.filename());
-        file.setExt(filePart.headers().getContentDisposition().getType());
-        file.setExpiryDate(null); //TODO expiryDate will be added
+        file.setExt(filePart.headers().getContentType().getType());
+        file.setExpiryDate(new Date());
         fileRepository.save(file).subscribe();
-        return Mono.just(file);
+
+        FileUploadResponse fileUploadResponse = new FileUploadResponse();
+        fileUploadResponse.setExtension(filePart.headers().getContentType().getType());
+        fileUploadResponse.setFileId(fileId);
+        fileUploadResponse.setFilename(filePart.filename());
+        fileUploadResponse.setThumbnailname(fileId + "_thumbnail");
+        return Mono.just(fileUploadResponse);
     }
 
-    private Path path(String id) {
 
-        return base.resolve(id);
-    }
-
-    public Mono<File> getFile(UUID id){
+    public Mono<File> getFile(UUID id) {
 
         return fileRepository.findById(id);
     }

@@ -18,12 +18,14 @@ public class File implements Serializable {
     @CassandraType(type = DataType.Name.UUID)
     private UUID id;
 
-    private String Description;
+    private String description;
+
+    private String thumbnail;
 
     private String ext;
 
     private String filename;
 
-    private Date ExpiryDate;
+    private Date expiryDate;
 
 }
